@@ -8,6 +8,9 @@ services:
     startCommand: uvicorn webhook_bot:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: BOT_TOKEN
-        value: 8696373751:AAFSjUHh5wSIELVLdTe2nv-5D_Tc0JicvBc
+        value: {{ secrets.BOT_TOKEN }}
       - key: PYTHON_VERSION
         value: 3.11.0
+
+# ВАЖНО: Токен хранится в переменной окружения BOT_TOKEN на Render
+# Никогда не храните токен в этом файле!
