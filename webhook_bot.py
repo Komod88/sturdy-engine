@@ -194,6 +194,7 @@ class FurArenaBot:
             "model": AI_MODEL,
             "messages": [
                 {"role": "system", "content": self.system_prompt},
+                {"role": "system", "content": self.system_prompt},
                 *self.user_contexts[user_id]
             ],
             "temperature": 0.9,
