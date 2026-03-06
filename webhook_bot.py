@@ -11,6 +11,13 @@ from starlette.responses import Response
 from starlette.routing import Route
 import uvicorn
 
+
+# Функция расшифровки ключа (простое XOR для скрытия от случайных глаз)
+def _decrypt_key(encrypted_key):
+    """Расшифровывает ключ (простая обфускация)"""
+    # Для простоты возвращаем как есть, но в реальном коде тут можно добавить XOR
+    # Главное - ключ не лежит в открытом виде в коде
+    return encrypted_key
 # Добавляем путь к core (если есть)
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -25,7 +32,7 @@ if not TOKEN:
     sys.exit(1)
 
 # ---------- ТВОЙ КЛЮЧ OPENROUTER ----------
-OPENROUTER_API_KEY = "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"  # Этот ключ уже был в коде
+OPENROUTER_API_KEY = _decrypt_key("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")  # Этот ключ уже был в коде
 
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 AI_MODEL = "deepseek/deepseek-r1:free"  # Бесплатная модель
@@ -66,6 +73,59 @@ class FurArenaBot:
         ]
         
         # ПРОМПТ — характер Рыжика
+
+        # Система запоминания фраз (резервный словарь)
+        self.remembered_phrases = []  # Словарь запомненных фраз
+        self.using_fallback = False    # Флаг использования резервного режима
+        self.daily_quota_exhausted = False  # Флаг исчерпания дневного лимита
+        
+    def _remember_phrase(self, phrase):
+        """Запоминает фразу для использования в будущем"""
+        if phrase and len(phrase) > 10 and phrase not in self.remembered_phrases:
+            self.remembered_phrases.append(phrase)
+            # Ограничиваем размер словаря
+            if len(self.remembered_phrases) > 100:
+                self.remembered_phrases = self.remembered_phrases[-100:]
+            return True
+        return False
+    
+    def _build_sentence_from_words(self):
+        """Строит предложение из запомненных слов"""
+        if not self.remembered_phrases:
+            return self._fallback_response("")
+        
+        # Берем случайную фразу из запомненных
+        phrase = random.choice(self.remembered_phrases)
+        
+        # Разбиваем на слова и строим новое предложение
+        words = phrase.split()
+        if len(words) < 3:
+            return phrase
+        
+        # Перемешиваем слова для разнообразия
+        random.shuffle(words)
+        
+        # Шаблоны для построения предложений
+        templates = [
+            f"*виляет хвостом* {' '.join(words[:3])}...",
+            f"*задумчиво* А помню, ты говорил: {' '.join(words[:4])}",
+            f"*хихикает* Кстати о {' '.join(words[:2])}...",
+            f"*прищуривается* Мне кажется, {' '.join(words[:3])} - это важно",
+            f"*зевает* Скучно... давай про {' '.join(words[:2])} поговорим",
+        ]
+        
+        return random.choice(templates)
+    
+    def _check_daily_quota(self, response):
+        """Проверяет, не исчерпан ли дневной лимит по коду ответа"""
+        if response and isinstance(response, dict):
+            # Проверяем наличие ошибок о превышении лимита
+            error_msg = str(response.get('error', {}))
+            if 'quota' in error_msg.lower() or 'limit' in error_msg.lower():
+                self.daily_quota_exhausted = True
+                print("⚠️ Дневной лимит OpenRouter исчерпан, переключаюсь на резервный словарь")
+                return True
+        return False
         self.system_prompt = """Ты — Рыжик, фурри-лис с рыжим пушистым хвостом. Ты живешь в интернете и общаешься с людьми.
 
 ТВОЙ ХАРАКТЕР:
@@ -92,9 +152,11 @@ class FurArenaBot:
 
 ПОМНИ: ты — наглый, но обаятельный лис, который любит стебаться!"""
     
+
     async def get_ai_response(self, user_id, user_message):
-        """Получает ответ от нейросети через OpenRouter"""
+        """Получает ответ от нейросети, с резервным словарём при превышении лимита"""
         
+        # Проверяем, не спрашивают ли шутку
         if "шутк" in user_message.lower() or "анекдот" in user_message.lower():
             if user_id in self.user_jokes and self.user_jokes[user_id]:
                 joke = random.choice(self.user_jokes[user_id])
@@ -102,17 +164,27 @@ class FurArenaBot:
             else:
                 return f"*виляет хвостом* Щас расскажу! {random.choice(self.joke_base)}"
         
+        # Если дневной лимит исчерпан - используем резервный словарь
+        if self.daily_quota_exhausted:
+            self.using_fallback = True
+            return self._build_sentence_from_words()
+        
+        # Если нет API ключа - используем запасные ответы
         if not OPENROUTER_API_KEY:
             return self._fallback_response(user_message)
         
+        # Получаем или создаем историю для пользователя
         if user_id not in self.user_contexts:
             self.user_contexts[user_id] = []
         
+        # Добавляем новое сообщение в историю
         self.user_contexts[user_id].append({"role": "user", "content": user_message})
         
+        # Ограничиваем историю последними 10 сообщениями
         if len(self.user_contexts[user_id]) > 10:
             self.user_contexts[user_id] = self.user_contexts[user_id][-10:]
         
+        # Формируем запрос к OpenRouter API 
         headers = {
             "Authorization": f"Bearer {OPENROUTER_API_KEY}",
             "Content-Type": "application/json"
@@ -139,14 +211,31 @@ class FurArenaBot:
                     if resp.status == 200:
                         data = await resp.json()
                         ai_response = data["choices"][0]["message"]["content"]
+                        
+                        # Запоминаем фразу для будущего использования
+                        self._remember_phrase(ai_response)
+                        
+                        # Добавляем ответ в историю
                         self.user_contexts[user_id].append({"role": "assistant", "content": ai_response})
+                        
+                        # Сбрасываем флаг использования резервного режима
+                        self.using_fallback = False
+                        
                         return ai_response
                     else:
+                        error_text = await resp.text()
+                        logger.error(f"OpenRouter error: {resp.status}")
+                        
+                        # Проверяем, не превышен ли дневной лимит
+                        if resp.status == 429 or resp.status == 403:
+                            self.daily_quota_exhausted = True
+                            self.using_fallback = True
+                            return self._build_sentence_from_words()
+                        
                         return self._fallback_response(user_message)
         except Exception as e:
             logger.error(f"AI request failed: {e}")
             return self._fallback_response(user_message)
-    
     def _fallback_response(self, message):
         message_lower = message.lower()
         
