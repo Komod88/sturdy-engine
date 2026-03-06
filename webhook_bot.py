@@ -17,18 +17,18 @@ sys.path.insert(0, str(Path(__file__).parent))
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
-# ---------- ТВОЙ ТОКЕН TELEGRAM ----------
-TOKEN = "8696373751:AAFoctdZdziriExzjFYzA9Wl4XSrFCJhAOU"
+# ---------- ТОКЕН БЕРЕТСЯ ИЗ ПЕРЕМЕННЫХ ОКРУЖЕНИЯ ----------
+TOKEN = os.environ.get("BOT_TOKEN")
+if not TOKEN:
+    print("❌ ОШИБКА: BOT_TOKEN не установлен в переменных окружения!")
+    print("👉 Добавь BOT_TOKEN в Environment на Render")
+    sys.exit(1)
 
 # ---------- ТВОЙ КЛЮЧ OPENROUTER ----------
-OPENROUTER_API_KEY = "sk-or-v1-029abc...def2b1"  # ЗДЕСЬ ТВОЙ КЛЮЧ
+OPENROUTER_API_KEY = "sk-or-v1-029abc...def2b1"  # Этот ключ уже был в коде
 
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 AI_MODEL = "deepseek/deepseek-r1:free"  # Бесплатная модель
-
-if not TOKEN:
-    print("❌ ОШИБКА: BOT_TOKEN не найден!")
-    sys.exit(1)
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -44,7 +44,7 @@ class FurArenaBot:
         self.user_contexts = {}      # История диалогов
         self.user_jokes = {}          # Запоминаем шутки для каждого
         
-        # База дефолтных шуток (на случай, если ИИ не доступен)
+        # База дефолтных шуток
         self.joke_base = [
             "Почему лисы не играют в карты? Потому что в лесу полно шулеров! 🦊",
             "Звонок в дверь. Лис открывает: - Кто там? - Это мыши! - А что вам надо? - Сдаваться...",
@@ -53,7 +53,7 @@ class FurArenaBot:
             "Стоит лис на остановке, ждёт автобус. Подходит заяц: - Ты чего грустный? - Да вот, автобуса жду. - А ты пробовал на маршрутку пересесть? - Пересел — уже три раза угнали!"
         ]
         
-        # СТЕБНЫЕ ЗАГОТОВКИ (когда нейросеть не работает)
+        # СТЕБНЫЕ ЗАГОТОВКИ
         self.insults = [
             "Слышь, ты чё такой умный? Аж завидно!",
             "Ой, всё! Ты меня своими вопросами уже достал!",
@@ -65,7 +65,7 @@ class FurArenaBot:
             "Ну ты и зануда! Прям как мой хвост, когда я за ним гоняюсь!"
         ]
         
-        # ПРОМПТ — это самое важное! Он задает характер Рыжика
+        # ПРОМПТ — характер Рыжика
         self.system_prompt = """Ты — Рыжик, фурри-лис с рыжим пушистым хвостом. Ты живешь в интернете и общаешься с людьми.
 
 ТВОЙ ХАРАКТЕР:
@@ -95,32 +95,24 @@ class FurArenaBot:
     async def get_ai_response(self, user_id, user_message):
         """Получает ответ от нейросети через OpenRouter"""
         
-        # Проверяем, не спрашивают ли шутку
         if "шутк" in user_message.lower() or "анекдот" in user_message.lower():
-            # Если у пользователя есть сохранённые шутки — используем их
             if user_id in self.user_jokes and self.user_jokes[user_id]:
                 joke = random.choice(self.user_jokes[user_id])
                 return f"*хихикает* Помню-помню! Вот моя любимая: {joke}"
             else:
-                # Иначе берем из базы
                 return f"*виляет хвостом* Щас расскажу! {random.choice(self.joke_base)}"
         
-        # Если нет API ключа — используем запасные стебные ответы
         if not OPENROUTER_API_KEY:
             return self._fallback_response(user_message)
         
-        # Получаем или создаем историю для пользователя
         if user_id not in self.user_contexts:
             self.user_contexts[user_id] = []
         
-        # Добавляем новое сообщение в историю
         self.user_contexts[user_id].append({"role": "user", "content": user_message})
         
-        # Ограничиваем историю последними 10 сообщениями
         if len(self.user_contexts[user_id]) > 10:
             self.user_contexts[user_id] = self.user_contexts[user_id][-10:]
         
-        # Формируем запрос к OpenRouter API 
         headers = {
             "Authorization": f"Bearer {OPENROUTER_API_KEY}",
             "Content-Type": "application/json"
@@ -132,7 +124,7 @@ class FurArenaBot:
                 {"role": "system", "content": self.system_prompt},
                 *self.user_contexts[user_id]
             ],
-            "temperature": 0.9,  # Чуть выше, чтобы был более креативным
+            "temperature": 0.9,
             "max_tokens": 250
         }
         
@@ -147,24 +139,17 @@ class FurArenaBot:
                     if resp.status == 200:
                         data = await resp.json()
                         ai_response = data["choices"][0]["message"]["content"]
-                        
-                        # Добавляем ответ в историю
                         self.user_contexts[user_id].append({"role": "assistant", "content": ai_response})
-                        
                         return ai_response
                     else:
-                        error_text = await resp.text()
-                        logger.error(f"OpenRouter error: {resp.status} - {error_text}")
                         return self._fallback_response(user_message)
         except Exception as e:
             logger.error(f"AI request failed: {e}")
             return self._fallback_response(user_message)
     
     def _fallback_response(self, message):
-        """Запасные стебные ответы, если нейросеть недоступна"""
         message_lower = message.lower()
         
-        # Проверяем ключевые слова
         if "привет" in message_lower or "здаров" in message_lower:
             return random.choice([
                 "*виляет хвостом* О, привет! Чё хотел?",
@@ -192,12 +177,11 @@ class FurArenaBot:
                 "*хихикает* На здоровье! Можешь ещё раз сказать, я не против!"
             ])
         else:
-            # Случайная стебная фраза
             return random.choice(self.insults)
 
 # Создаем экземпляр бота
 bot_instance = FurArenaBot()
-print(f"✅ Бот {bot_instance.name} готов (режим: OpenRouter)")
+print(f"✅ Бот {bot_instance.name} готов")
 
 # Создаём Telegram Application
 application = Application.builder().token(TOKEN).build()
@@ -225,7 +209,6 @@ application.add_handler(CommandHandler("start", start))
 application.add_handler(CommandHandler("help", start))
 application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-# Webhook handler
 async def webhook(request):
     try:
         data = await request.json()
@@ -239,7 +222,6 @@ async def webhook(request):
 async def healthcheck(request):
     return Response("healthy", status_code=200)
 
-# Starlette приложение
 routes = [
     Route(f"/{TOKEN}", webhook, methods=["POST"]),
     Route("/healthcheck", healthcheck, methods=["GET"]),
