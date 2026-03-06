@@ -23,7 +23,7 @@ except ImportError:
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
-TOKEN = os.environ.get("BOT_TOKEN", "8696373751:AAHVQRg9ZXrJbuaKnT1UdTIAvqa9GEfPan4")
+TOKEN = os.environ.get("BOT_TOKEN", "8696373751:AAFSjUHh5wSIELVLdTe2nv-5D_Tc0JicvBc")
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 class SimpleBot:
