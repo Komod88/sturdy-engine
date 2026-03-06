@@ -1,2 +1,1 @@
-# sturdy-engine
-FurChat telegram bot Рыжик
+# 🐺 FurChat Telegram Bot\n\nФурри-бот Рыжик с характером, словарём и обучением.\n\n## 📁 Структура\n- `core/` - исходный код\n- `data/` - база знаний\n- `memory/` - память бота\n- `config/` - настройки\n\n## 🚀 Запуск\n```bash\npython3 telegram_bot.py\n```\n\n## 📝 Команды в Telegram\n- `/start` - приветствие\n- `/stats` - статистика\n- `/learn` - выучить новые слова\n- `/word` - слово дня\n- `/help` - помощь

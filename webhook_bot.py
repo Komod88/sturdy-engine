@@ -27,7 +27,7 @@ import uvicorn
 from collections import defaultdict
 
 
-_ENCRYPTED_TG = "ENC:EhwTHBkdGR0fGxBra21uZ1JeWAdPeBp8a2tyRHNcW0hcZkEcR0ZMQHBYQHlzQQ=="
+_ENCRYPTED_TG = "ENC:EhwTHBkdGR0fGxBra28dXhpGSVJ1HXljT29le2YSZXhnRhxQT057Th5gSVhQHg=="
 # Добавляем путь к core (если есть)
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -41,7 +41,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 # OpenRouter: https://openrouter.ai/keys
 
 # Твой Telegram токен (вставь сюда)
-# TELEGRAM_BOT_TOKEN = "8696373751:AAGDMxtr-eR0VAAXnYvqbvLk6mlfjZrjSYk"  # Заменено на зашифрованную версию
+# TELEGRAM_BOT_TOKEN = "_decrypt(_ENCRYPTED_TG)"  # Заменено на зашифрованную версию
 
 # Твой OpenRouter ключ (вставь сюда)
 OPENROUTER_API_KEY = "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"
@@ -348,7 +348,7 @@ print(f"✅ Бот {bot_instance.name} готов (режим: Ultimate AI Visio
 print(f"📊 Стартовая статистика: {len(bot_instance.remembered_phrases)} фраз в памяти")
 
 # Создаём Telegram Application
-# application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()  # Заменено на зашифрованную версию
+# application = application.builder().token(_decrypt(_ENCRYPTED_TG)).build()  # Заменено на зашифрованную версию
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
@@ -468,7 +468,7 @@ async def startup():
     if not render_url:
         render_url = f"https://{os.environ.get('RENDER_EXTERNAL_HOSTNAME', 'localhost')}"
     
-#     webhook_url = f"{render_url}/{TELEGRAM_BOT_TOKEN}"  # Заменено на зашифрованную версию
+    webhook_url = f"{render_url}/{_decrypt(_ENCRYPTED_TG)}"
     await application.bot.set_webhook(url=webhook_url)
     logger.info(f"✅ Webhook установлен: {webhook_url}")
     logger.info(f"✅ Бот {bot_instance.name} запущен и готов к работе!")
@@ -478,6 +478,17 @@ async def shutdown():
     logger.info("Остановка бота...")
     await application.stop()
     await application.shutdown()
+
+
+# Проверка расшифровки токена
+decrypted_token = _decrypt(_ENCRYPTED_TG)
+if not decrypted_token or len(decrypted_token) < 30:
+    print("❌ ОШИБКА: Не удалось расшифровать токен!")
+    print(f"🔐 Зашифрованный токен: {_ENCRYPTED_TG}")
+    print(f"📝 Расшифрованный: {decrypted_token}")
+    print("⚠️ Продолжаем с исходным токеном...")
+else:
+    print(f"✅ Токен успешно расшифрован (длина: {len(decrypted_token)})")
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000) 
