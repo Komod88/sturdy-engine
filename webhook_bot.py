@@ -25,7 +25,7 @@ if not TOKEN:
     sys.exit(1)
 
 # ---------- ТВОЙ КЛЮЧ OPENROUTER ----------
-OPENROUTER_API_KEY = "sk-or-v1-029abc...def2b1"  # Этот ключ уже был в коде
+OPENROUTER_API_KEY = "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"  # Этот ключ уже был в коде
 
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 AI_MODEL = "deepseek/deepseek-r1:free"  # Бесплатная модель
