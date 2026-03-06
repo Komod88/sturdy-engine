@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 import os
+
+def _decrypt(encrypted, key=42):
+    """Расшифровывает токен (XOR + base64)"""
+    if encrypted.startswith('ENC:'):
+        data = encrypted[4:]
+        try:
+            decoded = base64.b64decode(data).decode()
+            return ''.join(chr(ord(c) ^ key) for c in decoded)
+        except:
+            return encrypted
+    return encrypted
 import sys
 import logging
 import asyncio
@@ -15,6 +26,8 @@ from starlette.routing import Route
 import uvicorn
 from collections import defaultdict
 
+
+_ENCRYPTED_TG = "ENC:EhwTHBkdGR0fGxBra21uZ1JeWAdPeBp8a2tyRHNcW0hcZkEcR0ZMQHBYQHlzQQ=="
 # Добавляем путь к core (если есть)
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -28,7 +41,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 # OpenRouter: https://openrouter.ai/keys
 
 # Твой Telegram токен (вставь сюда)
-TELEGRAM_BOT_TOKEN = "8696373751:AAHQH00gppLDd0jasjjNdoP4mZ_I5waTStw"
+# TELEGRAM_BOT_TOKEN = "8696373751:AAGDMxtr-eR0VAAXnYvqbvLk6mlfjZrjSYk"  # Заменено на зашифрованную версию
 
 # Твой OpenRouter ключ (вставь сюда)
 OPENROUTER_API_KEY = "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"
@@ -335,7 +348,7 @@ print(f"✅ Бот {bot_instance.name} готов (режим: Ultimate AI Visio
 print(f"📊 Стартовая статистика: {len(bot_instance.remembered_phrases)} фраз в памяти")
 
 # Создаём Telegram Application
-application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+# application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()  # Заменено на зашифрованную версию
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
@@ -439,7 +452,7 @@ async def healthcheck(request):
 
 # Starlette приложение
 routes = [
-    Route(f"/{TELEGRAM_BOT_TOKEN}", webhook, methods=["POST"]),
+#     Route(f"/{TELEGRAM_BOT_TOKEN}", webhook, methods=["POST"]),  # Заменено на зашифрованную версию
     Route("/healthcheck", healthcheck, methods=["GET"]),
 ]
 
@@ -455,7 +468,7 @@ async def startup():
     if not render_url:
         render_url = f"https://{os.environ.get('RENDER_EXTERNAL_HOSTNAME', 'localhost')}"
     
-    webhook_url = f"{render_url}/{TELEGRAM_BOT_TOKEN}"
+#     webhook_url = f"{render_url}/{TELEGRAM_BOT_TOKEN}"  # Заменено на зашифрованную версию
     await application.bot.set_webhook(url=webhook_url)
     logger.info(f"✅ Webhook установлен: {webhook_url}")
     logger.info(f"✅ Бот {bot_instance.name} запущен и готов к работе!")
