@@ -23,8 +23,16 @@ except ImportError:
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
-TOKEN = os.environ.get("BOT_TOKEN", "8696373751:AAF6Dja_iSxK8MQxLvq3z1Q3k2x_U_fz8gA")
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+TOKEN = os.environ.get("BOT_TOKEN", "")
+if not TOKEN:
+    print("❌ ОШИБКА: BOT_TOKEN не установлен в переменных окружения!")
+    sys.exit(1)
+
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
+logger = logging.getLogger(__name__)
 
 class SimpleBot:
     def __init__(self):
@@ -72,7 +80,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 application.add_handler(CommandHandler("start", start))
 application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-# Webhook handler для Starlette
+# Webhook handler для Starlette с правильной инициализацией
 async def webhook(request):
     try:
         data = await request.json()
@@ -80,7 +88,7 @@ async def webhook(request):
         await application.process_update(update)
         return Response("ok", status_code=200)
     except Exception as e:
-        logging.error(f"Webhook error: {e}")
+        logger.error(f"Webhook error: {e}")
         return Response("error", status_code=500)
 
 async def healthcheck(request):
@@ -94,13 +102,30 @@ routes = [
 
 app = Starlette(routes=routes)
 
-# Устанавливаем webhook при запуске
+# Асинхронная инициализация при запуске
+@app.on_event("startup")
 async def startup():
-    webhook_url = f"https://{os.environ.get('RENDER_EXTERNAL_HOSTNAME', 'localhost')}/{TOKEN}"
+    """Правильная инициализация Application"""
+    logger.info("Инициализация Telegram бота...")
+    await application.initialize()
+    await application.start()
+    
+    # Устанавливаем webhook
+    render_url = os.environ.get("RENDER_EXTERNAL_URL", "")
+    if not render_url:
+        # Определяем URL на Render
+        render_url = f"https://{os.environ.get('RENDER_EXTERNAL_HOSTNAME', 'localhost')}"
+    
+    webhook_url = f"{render_url}/{TOKEN}"
     await application.bot.set_webhook(url=webhook_url)
-    print(f"✅ Webhook установлен: {webhook_url}")
+    logger.info(f"✅ Webhook установлен: {webhook_url}")
 
-app.add_event_handler("startup", startup)
+@app.on_event("shutdown")
+async def shutdown():
+    """Корректное завершение"""
+    logger.info("Остановка бота...")
+    await application.stop()
+    await application.shutdown()
 
 # Для локального тестирования
 if __name__ == "__main__":
