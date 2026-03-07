@@ -241,20 +241,27 @@ class UltimateFurBot:
             self.stats["fallback_responses"] += 1
             return self._build_sentence_from_memory(user_id)
 
+    
     def get_stats(self):
+        """Возвращает статистику работы бота"""
         uptime = int(time.time() - self.start_time)
         hours = uptime // 3600
         minutes = (uptime % 3600) // 60
         return (f"📊 **Статистика**
 
-⏱️ Аптайм: {hours}ч {minutes}м
-💬 Сообщений: {self.stats['messages_processed']}
+"
+                f"⏱️ Аптайм: {hours}ч {minutes}м
+"
+                f"💬 Сообщений: {self.stats['messages_processed']}
 "
                 f"🤖 AI ответов: {self.stats['ai_responses']}
-🔄 Запасных: {self.stats['fallback_responses']}
+"
+                f"🔄 Запасных: {self.stats['fallback_responses']}
 "
                 f"👁️ Vision: {self.stats['vision_responses']}
-📚 Фраз: {len(self.remembered_phrases)}")
+"
+                f"📚 Фраз: {len(self.remembered_phrases)}")
+
 
 bot_instance = UltimateFurBot()
 application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
