@@ -732,34 +732,27 @@ async def test(request):
 
 # Эндпоинт для проверки статуса webhook
 
+
 async def check_webhook(request):
-
     """Проверяет статус webhook и возвращает информацию"""
-
     try:
-
         if not application:
-
             return Response("❌ Application не инициализирован", status_code=500)
-
         
-
         webhook_info = await application.bot.get_webhook_info()
-
         info_text = f"""📊 **Информация о webhook**
 
-
-
 URL: {webhook_info.url}
-
 Ожидающих обновлений: {webhook_info.pending_update_count}
-
 Последняя ошибка: {webhook_info.last_error_message or 'нет'}
-
 Количество ошибок: {webhook_info.last_error_date or 'нет'}
+Макс. соединений: {webhook_info.max_connections}
 
-
-# ========== ТЕСТОВЫЕ ЭНДПОИНТЫ ==========
+✅ Сервер работает
+"""
+        return Response(info_text, status_code=200)
+    except Exception as e:
+        return Response(f"❌ Ошибка: {e}", status_code=500)
 async def test(request):
     """Проверяет, что сервер работает"""
     return Response(
