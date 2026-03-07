@@ -14,6 +14,35 @@ from starlette.routing import Route
 import uvicorn
 from collections import defaultdict
 
+# ========== НАСТРОЙКА ПОРТА ДЛЯ RENDER ==========
+# Согласно документации Render:
+# - Веб-сервис должен быть привязан к 0.0.0.0
+# - Render передает порт через переменную окружения PORT
+# - Порт по умолчанию: 10000
+# - Зарезервированные порты (не использовать): 18012, 18013, 19099
+
+def get_port():
+    """Получает порт из переменной окружения Render"""
+    try:
+        port = int(os.environ.get("PORT", 10000))
+        # Проверяем, что порт не зарезервирован
+        reserved_ports = [18012, 18013, 19099]
+        if port in reserved_ports:
+            print(f"⚠️ Порт {port} зарезервирован, использую 10000")
+            return 10000
+        return port
+    except ValueError:
+        print("⚠️ Неверное значение PORT, использую 10000")
+        return 10000
+
+PORT = get_port()
+print(f"✅ Использую порт: {PORT} (из Render)")
+
+# Проверяем, что привязываемся к правильному хосту
+HOST = "0.0.0.0"  # Render требует привязки к 0.0.0.0
+print(f"✅ Хост: {HOST}")
+
+
 # Защита от rate limiting (ошибки 429)
 import time
 import asyncio
@@ -286,25 +315,32 @@ class UltimateFurBot:
 # ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
 
 
+
 async def webhook(request):
     """Обработчик входящих обновлений от Telegram"""
     try:
-        # Логируем входящий запрос для отладки
-        body = await request.body()
-        print(f"📥 Получен webhook запрос, размер: {len(body)} байт")
+        # Логируем входящий запрос
+        print(f"📥 Получен webhook запрос: {request.method} {request.url.path}")
         
-        # Проверяем, что это POST с JSON
+        # Проверяем метод
         if request.method != "POST":
             print(f"⚠️ Неправильный метод: {request.method}")
             return Response("Method not allowed", status_code=405)
         
-        # Парсим JSON
-        data = await request.json()
-        print(f"📦 Данные получены, тип: {type(data)}")
+        # Читаем тело запроса
+        body = await request.body()
+        print(f"📦 Размер запроса: {len(body)} байт")
         
-        # Проверяем, что application инициализирован
+        # Парсим JSON
+        try:
+            data = await request.json()
+        except Exception as e:
+            print(f"❌ Ошибка парсинга JSON: {e}")
+            return Response("Invalid JSON", status_code=400)
+        
+        # Проверяем application
         if not application:
-            print("❌ application не инициализирован!")
+            print("❌ Application не инициализирован!")
             return Response("Application not ready", status_code=500)
         
         # Создаем Update и обрабатываем
@@ -354,19 +390,106 @@ URL: {webhook_info.url}
 
 
 # ========== НАСТРОЙКА МАРШРУТОВ И ПРИЛОЖЕНИЯ ==========
+
+# ========== НАСТРОЙКА МАРШРУТОВ ==========
 routes = [
-    Route(f"/{TELEGRAM_BOT_TOKEN}", webhook, methods=["POST",
-    Route("/check", check_webhook, methods=["GET"]),]),
+    Route(f"/{TELEGRAM_BOT_TOKEN}", webhook, methods=["POST"]),
+    Route("/healthcheck", healthcheck, methods=["GET"]),
+    Route("/test", test, methods=["GET"]),
+    Route("/check", check_webhook, methods=["GET"]),
+    Route("/info", info, methods=["GET"]),
+]
+),]),
     Route("/healthcheck", healthcheck, methods=["GET"]),
     Route("/test", test, methods=["GET"]),
 ]
 
 app = Starlette(routes=routes)
+
+@app.on_event("startup")
+async def startup():
+    """Инициализация приложения и установка webhook"""
+    logger.info("🚀 Инициализация приложения...")
+    
+    # Инициализируем application
+    await application.initialize()
+    await application.start()
+    print("✅ Application инициализирован")
+    
+    # Получаем URL сервера от Render
+    # Render предоставляет URL через переменную окружения
+    render_url = os.environ.get("RENDER_EXTERNAL_URL")
+    if not render_url:
+        # Пробуем собрать из других переменных
+        render_service = os.environ.get("RENDER_SERVICE_NAME", "furchat-bot")
+        render_url = f"https://{render_service}.onrender.com"
+        print(f"⚠️ RENDER_EXTERNAL_URL не найден, использую: {render_url}")
+    
+    # Формируем webhook URL с правильным портом
+    # ВАЖНО: Render сам направляет трафик, порт не нужно указывать в URL
+    webhook_url = f"{render_url}/{TELEGRAM_BOT_TOKEN}"
+    print(f"🔗 Устанавливаю webhook: {webhook_url}")
+    
+    # Проверяем доступность через DNS
+    try:
+        import socket
+        from urllib.parse import urlparse
+        parsed = urlparse(webhook_url)
+        ip = socket.gethostbyname(parsed.hostname)
+        print(f"🌐 DNS резолвинг: {parsed.hostname} -> {ip}")
+    except Exception as e:
+        print(f"⚠️ Ошибка DNS: {e}")
+    
+    # Устанавливаем webhook
+    try:
+        # Проверяем текущий webhook
+        webhook_info = await application.bot.get_webhook_info()
+        print(f"📊 Текущий webhook: {webhook_info.url}")
+        
+        # Устанавливаем новый
+        result = await application.bot.set_webhook(
+            url=webhook_url,
+            max_connections=40,  # Рекомендуемое значение для бесплатного тарифа
+            allowed_updates=["message", "callback_query", "inline_query"]
+        )
+        
+        if result:
+            print(f"✅ Webhook успешно установлен: {webhook_url}")
+            # Проверяем установку
+            webhook_info = await application.bot.get_webhook_info()
+            print(f"✅ Подтверждение: {webhook_info.url}")
+            print(f"📨 Ожидающих обновлений: {webhook_info.pending_update_count}")
+        else:
+            print("❌ Не удалось установить webhook")
+            
+    except Exception as e:
+        print(f"❌ Ошибка установки webhook: {e}")
+        import traceback
+        traceback.print_exc()
+    
+    print(f"✅ Сервер готов на {HOST}:{PORT}")
+
 print(f"✅ Приложение Starlette создано. Маршруты: {[route.path for route in app.routes]}")
 
 # ========== ЗАПУСК ПРИЛОЖЕНИЯ ==========
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8000))
-    print(f"✅ Запуск на порту: {port}")
-    uvicorn.run(app, host="0.0.0.0", port=port)
 
+if __name__ == "__main__":
+    # Render требует привязки к порту из переменной окружения
+    # и к хосту 0.0.0.0
+    print(f"🚀 Запуск сервера на {HOST}:{PORT}")
+    print(f"📊 Доступные маршруты:")
+    for route in app.routes:
+        print(f"   • {route.path}")
+    
+    # Проверяем, что app определен
+    if 'app' not in locals() and 'app' not in globals():
+        print("❌ КРИТИЧЕСКАЯ ОШИБКА: app не определен!")
+        sys.exit(1)
+    
+    # Запускаем сервер
+    uvicorn.run(
+        app,
+        host=HOST,
+        port=PORT,
+        log_level="info"
+    )
