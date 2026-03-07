@@ -1,4 +1,4 @@
-# ФИНАЛЬНАЯ ВЕРСИЯ ДЛЯ PYTHON 3.11
+# Python 3.11 - ФИНАЛЬНАЯ РАБОЧАЯ ВЕРСИЯ
 python-telegram-bot==21.4
 starlette==0.37.2
 uvicorn[standard]==0.29.0
@@ -12,9 +12,9 @@ aiolimiter==1.2.0
 cachetools==5.5.2
 python-dotenv==1.0.1
 
-# Pydantic - СТАБИЛЬНЫЕ ВЕРСИИ ДЛЯ PYTHON 3.11
+# Pydantic - стабильные версии для Python 3.11
 pydantic==2.7.4
 pydantic-core==2.18.4
 
-# Pillow - стабильная версия
-Pillow==10.4.0
+# Pillow
+Pillow==11.1.0
