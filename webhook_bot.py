@@ -256,16 +256,38 @@ class UltimateFurBot:
                 f"👁️ Vision: {self.stats['vision_responses']}\n"
                 f"📚 Фраз: {len(self.remembered_phrases)}")
 
+# ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
 
+async def webhook(request):
+    try:
+        data = await request.json()
+        update = Update.de_json(data, application.bot)
+        await application.process_update(update)
+        return Response("ok", status_code=200)
+    except Exception as e:
+        logger.error(f"Webhook error: {e}")
+        return Response("error", status_code=500)
+
+async def healthcheck(request):
+    return Response("healthy", status_code=200)
+
+async def test(request):
+    return Response("✅ Бот работает! Сервер запущен.", status_code=200)
+
+
+# ========== НАСТРОЙКА МАРШРУТОВ И ПРИЛОЖЕНИЯ ==========
+routes = [
+    Route(f"/{TELEGRAM_BOT_TOKEN}", webhook, methods=["POST"]),
+    Route("/healthcheck", healthcheck, methods=["GET"]),
+    Route("/test", test, methods=["GET"]),
+]
+
+app = Starlette(routes=routes)
+print(f"✅ Приложение Starlette создано. Маршруты: {[route.path for route in app.routes]}")
+
+# ========== ЗАПУСК ПРИЛОЖЕНИЯ ==========
 if __name__ == "__main__":
-    # Render передает порт через переменную окружения PORT
     port = int(os.environ.get("PORT", 8000))
     print(f"✅ Запуск на порту: {port}")
-    
-    # Убеждаемся, что app определен
-    if 'app' not in locals() and 'app' not in globals():
-        print("❌ ОШИБКА: app не определен!")
-        sys.exit(1)
-    
     uvicorn.run(app, host="0.0.0.0", port=port)
 
