@@ -14,6 +14,33 @@ from starlette.routing import Route
 import uvicorn
 from collections import defaultdict
 
+# Защита от rate limiting (ошибки 429)
+import time
+import asyncio
+from functools import wraps
+
+def rate_limit(max_per_second=30):
+    """Декоратор для ограничения частоты запросов"""
+    min_interval = 1.0 / max_per_second
+    last_called = [0.0]
+    
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            elapsed = time.time() - last_called[0]
+            left_to_wait = min_interval - elapsed
+            if left_to_wait > 0:
+                await asyncio.sleep(left_to_wait)
+            ret = await func(*args, **kwargs)
+            last_called[0] = time.time()
+            return ret
+        return wrapper
+    return decorator
+
+# Применяем к webhook
+webhook = rate_limit()(webhook)
+
+
 # Загружаем переменные из .env файла
 from dotenv import load_dotenv
 
@@ -258,26 +285,76 @@ class UltimateFurBot:
 
 # ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
 
+
 async def webhook(request):
+    """Обработчик входящих обновлений от Telegram"""
     try:
+        # Логируем входящий запрос для отладки
+        body = await request.body()
+        print(f"📥 Получен webhook запрос, размер: {len(body)} байт")
+        
+        # Проверяем, что это POST с JSON
+        if request.method != "POST":
+            print(f"⚠️ Неправильный метод: {request.method}")
+            return Response("Method not allowed", status_code=405)
+        
+        # Парсим JSON
         data = await request.json()
+        print(f"📦 Данные получены, тип: {type(data)}")
+        
+        # Проверяем, что application инициализирован
+        if not application:
+            print("❌ application не инициализирован!")
+            return Response("Application not ready", status_code=500)
+        
+        # Создаем Update и обрабатываем
         update = Update.de_json(data, application.bot)
         await application.process_update(update)
+        
+        print("✅ Обновление успешно обработано")
         return Response("ok", status_code=200)
+        
     except Exception as e:
-        logger.error(f"Webhook error: {e}")
-        return Response("error", status_code=500)
-
+        print(f"❌ Ошибка в webhook: {e}")
+        import traceback
+        traceback.print_exc()
+        return Response(f"Error: {str(e)}", status_code=500)
 async def healthcheck(request):
     return Response("healthy", status_code=200)
 
 async def test(request):
+
+
+# Эндпоинт для проверки статуса webhook
+async def check_webhook(request):
+    """Проверяет статус webhook и возвращает информацию"""
+    try:
+        if not application:
+            return Response("❌ Application не инициализирован", status_code=500)
+        
+        webhook_info = await application.bot.get_webhook_info()
+        info_text = f"""📊 **Информация о webhook**
+
+URL: {webhook_info.url}
+Ожидающих обновлений: {webhook_info.pending_update_count}
+Последняя ошибка: {webhook_info.last_error_message or 'нет'}
+Количество ошибок: {webhook_info.last_error_date or 'нет'}
+Макс. соединений: {webhook_info.max_connections}
+
+✅ Сервер работает
+"""
+        return Response(info_text, status_code=200)
+    except Exception as e:
+        return Response(f"❌ Ошибка: {e}", status_code=500)
+
+# Добавляем в routes (позже)
     return Response("✅ Бот работает! Сервер запущен.", status_code=200)
 
 
 # ========== НАСТРОЙКА МАРШРУТОВ И ПРИЛОЖЕНИЯ ==========
 routes = [
-    Route(f"/{TELEGRAM_BOT_TOKEN}", webhook, methods=["POST"]),
+    Route(f"/{TELEGRAM_BOT_TOKEN}", webhook, methods=["POST",
+    Route("/check", check_webhook, methods=["GET"]),]),
     Route("/healthcheck", healthcheck, methods=["GET"]),
     Route("/test", test, methods=["GET"]),
 ]
