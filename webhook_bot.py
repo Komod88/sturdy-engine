@@ -4,6 +4,13 @@
 
 import os
 
+# ========== ОТЛАДОЧНАЯ ИНФОРМАЦИЯ ==========
+import socket
+print(f"🔍 Хост: {socket.gethostname()}")
+print(f"🔍 IP: {socket.gethostbyname(socket.gethostname())}")
+print(f"🔍 Порт из окружения: {os.environ.get('PORT', 'не задан')}")
+
+
 
 
 import sys
