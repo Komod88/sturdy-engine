@@ -46,15 +46,13 @@ if not TELEGRAM_BOT_TOKEN:
     print(f"Токен найден: {'✅' if TELEGRAM_BOT_TOKEN else '❌'}")
     print(f"Длина токена: {len(TELEGRAM_BOT_TOKEN) if TELEGRAM_BOT_TOKEN else 0}")
     print("="*50)
-    print(f"PORT из окружения: {os.environ.get('PORT', 'не задан')}")
-    print(f"RENDER_EXTERNAL_URL: {os.environ.get('RENDER_EXTERNAL_URL', 'не задан')}")
     print(f"Токен найден: {'✅' if TELEGRAM_BOT_TOKEN else '❌'}")
     print(f"Длина токена: {len(TELEGRAM_BOT_TOKEN) if TELEGRAM_BOT_TOKEN else 0}")
     print("="*50)
     print("❌ ОШИБКА: TELEGRAM_BOT_TOKEN не найден!")
     sys.exit(1)
 
-OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+    OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 AI_MODEL = "google/gemini-2.0-flash-lite-001"
 
