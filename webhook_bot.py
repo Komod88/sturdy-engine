@@ -242,97 +242,16 @@ class UltimateFurBot:
             return self._build_sentence_from_memory(user_id)
 
     
+    
     def get_stats(self):
         """Возвращает статистику работы бота"""
         uptime = int(time.time() - self.start_time)
         hours = uptime // 3600
         minutes = (uptime % 3600) // 60
-        return (f"📊 **Статистика**
-
-"
-                f"⏱️ Аптайм: {hours}ч {minutes}м
-"
-                f"💬 Сообщений: {self.stats['messages_processed']}
-"
-                f"🤖 AI ответов: {self.stats['ai_responses']}
-"
-                f"🔄 Запасных: {self.stats['fallback_responses']}
-"
-                f"👁️ Vision: {self.stats['vision_responses']}
-"
+        return (f"📊 **Статистика**\n\n"
+                f"⏱️ Аптайм: {hours}ч {minutes}м\n"
+                f"💬 Сообщений: {self.stats['messages_processed']}\n"
+                f"🤖 AI ответов: {self.stats['ai_responses']}\n"
+                f"🔄 Запасных: {self.stats['fallback_responses']}\n"
+                f"👁️ Vision: {self.stats['vision_responses']}\n"
                 f"📚 Фраз: {len(self.remembered_phrases)}")
-
-
-bot_instance = UltimateFurBot()
-application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
-
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.effective_user
-    await update.message.reply_text(
-        f"🦊 Привет, {user.first_name}!
-Я {bot_instance.name} - фурри-лис с AI-зрением!
-"
-        f"📸 Отправь фото - увижу и прокомментирую
-/stats - статистика"
-    )
-
-async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(bot_instance.get_stats(), parse_mode='Markdown')
-
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = str(update.effective_user.id)
-    msg = update.message.text
-    await update.message.chat.send_action(action="typing")
-    response = await bot_instance.get_ai_response(user_id, msg)
-    if response:
-        await update.message.reply_text(response)
-
-async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = str(update.effective_user.id)
-    photo = update.message.photo[-1]
-    caption = update.message.caption or ""
-    file = await context.bot.get_file(photo.file_id)
-    file_url = file.file_path
-    await update.message.chat.send_action(action="typing")
-    response = await bot_instance.get_ai_response(user_id, "", photo_url=file_url, photo_caption=caption)
-    if response:
-        await update.message.reply_text(response)
-
-application.add_handler(CommandHandler("start", start))
-application.add_handler(CommandHandler("stats", stats))
-application.add_handler(MessageHandler(filters.PHOTO, handle_photo))
-application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-
-async def webhook(request):
-    try:
-        data = await request.json()
-        update = Update.de_json(data, application.bot)
-        await application.process_update(update)
-        return Response("ok", status_code=200)
-    except Exception as e:
-        logger.error(f"Webhook error: {e}")
-        return Response("error", status_code=500)
-
-async def healthcheck(request):
-    return Response("healthy", status_code=200)
-
-routes = [Route(f"/{TELEGRAM_BOT_TOKEN}", webhook, methods=["POST"]), Route("/healthcheck", healthcheck, methods=["GET"])]
-app = Starlette(routes=routes)
-
-@app.on_event("startup")
-async def startup():
-    logger.info("Инициализация...")
-    await application.initialize()
-    await application.start()
-    render_url = os.environ.get("RENDER_EXTERNAL_URL", f"https://{os.environ.get('RENDER_EXTERNAL_HOSTNAME', 'localhost')}")
-    webhook_url = f"{render_url}/{TELEGRAM_BOT_TOKEN}"
-    await application.bot.set_webhook(url=webhook_url)
-    logger.info(f"✅ Webhook установлен")
-
-@app.on_event("shutdown")
-async def shutdown():
-    await application.stop()
-    await application.shutdown()
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
