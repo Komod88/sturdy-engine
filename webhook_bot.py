@@ -306,34 +306,25 @@ env_loaded = False
 
 
 
+# Загружаем переменные из .env файла
+from dotenv import load_dotenv
+
+# Пытаемся загрузить .env из разных мест
+env_loaded = False
 env_paths = [
+    Path('.env'),
+    Path('/etc/secrets/.env'),
+]
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    for env_path in env_paths:
-    for env_path in env_paths:
-
-
+for env_path in env_paths:
     if env_path.exists():
-
-
-
         load_dotenv(dotenv_path=env_path)
+        print(f"✅ Загружен .env из: {env_path}")
+        env_loaded = True
+        break
 
+if not env_loaded:
+    print("⚠️ .env файл не найден, использую переменные окружения")
 
 
         print(f"✅ Загружен .env из: {env_path}")
