@@ -313,11 +313,9 @@ env_paths = [
 
 
 
-    Path('/etc/secrets/.env'),
 
 
 
-    Path('/storage/emulated/0/FurryBot/FurChatTelegram/.env')
 
 
 
