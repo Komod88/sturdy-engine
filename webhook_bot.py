@@ -781,6 +781,8 @@ async def check_webhook(request):
 # ========== НАСТРОЙКА МАРШРУТОВ ==========
 
 # ========== НАСТРОЙКА МАРШРУТОВ ==========
+
+# ========== НАСТРОЙКА МАРШРУТОВ ==========
 routes = [
     Route(f"/{TELEGRAM_BOT_TOKEN}", webhook, methods=["POST"]),
     Route("/healthcheck", healthcheck, methods=["GET"]),
@@ -789,6 +791,11 @@ routes = [
     Route("/check", check_webhook, methods=["GET"]),
 ]
 ),
+    Route("/healthcheck", healthcheck, methods=["GET"]),
+    Route("/test", test, methods=["GET"]),
+    Route("/info", info, methods=["GET"]),
+    Route("/check", check_webhook, methods=["GET"]),
+]
     Route("/healthcheck", healthcheck, methods=["GET"]),
     Route("/test", test, methods=["GET"]),
     Route("/info", info, methods=["GET"]),
