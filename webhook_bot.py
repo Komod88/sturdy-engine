@@ -63,7 +63,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 print(f"✅ Токен загружен (длина: {len(TELEGRAM_BOT_TOKEN)})")
-    print("✅ OpenRouter API ключ: " + ("найден" if OPENROUTER_API_KEY else "не найден"))
+    print(f"✅ OpenRouter API ключ: {OPENROUTER_API_KEY if OPENROUTER_API_KEY else 'не найден'}")
 
 class SimpleBot:
     def __init__(self):
