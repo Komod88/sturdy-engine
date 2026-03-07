@@ -255,3 +255,9 @@ class UltimateFurBot:
                 f"🔄 Запасных: {self.stats['fallback_responses']}\n"
                 f"👁️ Vision: {self.stats['vision_responses']}\n"
                 f"📚 Фраз: {len(self.remembered_phrases)}")
+
+if __name__ == "__main__":
+    # Render передает порт через переменную окружения PORT
+    port = int(os.environ.get("PORT", 8000))
+    print(f"✅ Запуск на порту: {port}")
+    uvicorn.run(app, host="0.0.0.0", port=port)
