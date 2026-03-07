@@ -24,8 +24,6 @@ if not TELEGRAM_BOT_TOKEN:
     print("❌ ОШИБКА: Переменная окружения TELEGRAM_BOT_TOKEN не установлена!")
     print("📌 Добавь TELEGRAM_BOT_TOKEN в Environment на Render")
     sys.exit(1)
-else:
-    print(f"✅ Токен загружен из переменных окружения (длина: {len(TELEGRAM_BOT_TOKEN)})")
 
 # OpenRouter ключ
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
@@ -47,7 +45,6 @@ class UltimateFurBot:
         self.user_vocabulary = defaultdict(set)
         self.using_fallback = False
         self.daily_quota_exhausted = False
-        self.total_messages = 0
         self.start_time = time.time()
         
         self.stats = {

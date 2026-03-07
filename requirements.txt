@@ -12,9 +12,9 @@ aiolimiter==1.2.0
 cachetools==5.5.2
 python-dotenv==1.0.1
 
-# Pydantic - актуальные версии
-pydantic==2.11.3
-pydantic-core==2.33.1
+# Pydantic - СТАБИЛЬНЫЕ ВЕРСИИ ДЛЯ PYTHON 3.11
+pydantic==2.7.4
+pydantic-core==2.18.4
 
-# Pillow - актуальная версия
-Pillow==11.2.1
+# Pillow - стабильная версия
+Pillow==10.4.0
