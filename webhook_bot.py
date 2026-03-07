@@ -323,7 +323,10 @@ async def healthcheck(request):
     return Response("healthy", status_code=200)
 
 async def test(request):
+    pass
 
+
+# Эндпоинт для проверки статуса webhook
 
 # Эндпоинт для проверки статуса webhook
 async def check_webhook(request):
@@ -346,7 +349,6 @@ URL: {webhook_info.url}
         return Response(info_text, status_code=200)
     except Exception as e:
         return Response(f"❌ Ошибка: {e}", status_code=500)
-
 # Добавляем в routes (позже)
     return Response("✅ Бот работает! Сервер запущен.", status_code=200)
 
