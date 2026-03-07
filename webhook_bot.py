@@ -324,9 +324,8 @@ env_paths = [
 
 
 
-
 for env_path in env_paths:
-
+    for env_path in env_paths:
 
 
     if env_path.exists():
