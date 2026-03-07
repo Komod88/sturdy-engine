@@ -256,8 +256,16 @@ class UltimateFurBot:
                 f"👁️ Vision: {self.stats['vision_responses']}\n"
                 f"📚 Фраз: {len(self.remembered_phrases)}")
 
+
 if __name__ == "__main__":
     # Render передает порт через переменную окружения PORT
     port = int(os.environ.get("PORT", 8000))
     print(f"✅ Запуск на порту: {port}")
+    
+    # Убеждаемся, что app определен
+    if 'app' not in locals() and 'app' not in globals():
+        print("❌ ОШИБКА: app не определен!")
+        sys.exit(1)
+    
     uvicorn.run(app, host="0.0.0.0", port=port)
+
