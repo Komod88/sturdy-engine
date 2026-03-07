@@ -1,16 +1,12 @@
-import os
 services:
   - type: web
     name: furchat-bot
     runtime: python
     plan: free
-    buildCommand: pip install -r requirements.txt
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
     startCommand: uvicorn webhook_bot:app --host 0.0.0.0 --port $PORT
     envVars:
-      - key: BOT_TOKEN
-        value: {{ secrets.BOT_TOKEN }}
       - key: PYTHON_VERSION
         value: 3.11.0
-
-# ВАЖНО: Токен хранится в переменной окружения BOT_TOKEN на Render
-# Никогда не храните токен в этом файле!
