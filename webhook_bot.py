@@ -392,8 +392,16 @@ URL: {webhook_info.url}
 # ========== НАСТРОЙКА МАРШРУТОВ И ПРИЛОЖЕНИЯ ==========
 
 # ========== НАСТРОЙКА МАРШРУТОВ ==========
+
+# ========== НАСТРОЙКА МАРШРУТОВ ==========
 routes = [
     Route(f"/{TELEGRAM_BOT_TOKEN}", webhook, methods=["POST"]),
+    Route("/healthcheck", healthcheck, methods=["GET"]),
+    Route("/test", test, methods=["GET"]),
+    Route("/check", check_webhook, methods=["GET"]),
+    Route("/info", info, methods=["GET"]),
+]
+),
     Route("/healthcheck", healthcheck, methods=["GET"]),
     Route("/test", test, methods=["GET"]),
     Route("/check", check_webhook, methods=["GET"]),
