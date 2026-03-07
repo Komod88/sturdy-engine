@@ -11,10 +11,6 @@ APScheduler==3.11.0
 aiolimiter==1.2.0
 cachetools==5.5.2
 python-dotenv==1.0.1
-
-# Pydantic - стабильные версии для Python 3.11
-pydantic==2.7.4
-pydantic-core==2.18.4
-
-# Pillow
-Pillow==11.1.0
+pydantic==2.5.3
+pydantic-core==2.14.6
+Pillow==10.4.0

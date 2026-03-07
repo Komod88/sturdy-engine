@@ -14,27 +14,76 @@ from starlette.routing import Route
 import uvicorn
 from collections import defaultdict
 
+# Загружаем переменные из .env файла
+from dotenv import load_dotenv
+
+# Пытаемся загрузить .env из разных мест
+env_loaded = False
+env_paths = [
+    Path('.env'),
+    Path('/etc/secrets/.env'),
+    Path('/storage/emulated/0/FurryBot/FurChatTelegram/.env')
+]
+
+for env_path in env_paths:
+    if env_path.exists():
+        load_dotenv(dotenv_path=env_path)
+        print(f"✅ Загружен .env из: {env_path}")
+        env_loaded = True
+        break
+
+if not env_loaded:
+    print("⚠️ .env файл не найден, использую переменные окружения")
+
+# Добавляем путь к core
 sys.path.insert(0, str(Path(__file__).parent))
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
-# ========== ПОЛУЧЕНИЕ ТОКЕНА ИЗ ПЕРЕМЕННЫХ ОКРУЖЕНИЯ ==========
-TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
-if not TELEGRAM_BOT_TOKEN:
-    print("❌ ОШИБКА: Переменная окружения TELEGRAM_BOT_TOKEN не установлена!")
-    print("📌 Добавь TELEGRAM_BOT_TOKEN в Environment на Render")
+# ========== ПРОВЕРКА ПЕРЕМЕННЫХ ОКРУЖЕНИЯ ==========
+def check_environment():
+    """Проверяет наличие всех необходимых переменных окружения"""
+    required_vars = ["TELEGRAM_BOT_TOKEN"]
+    missing_vars = []
+    
+    for var in required_vars:
+        if not os.environ.get(var):
+            missing_vars.append(var)
+    
+    if missing_vars:
+        print(f"❌ ОШИБКА: Отсутствуют переменные окружения: {', '.join(missing_vars)}")
+        print("📌 Добавь их в раздел Environment на Render или в .env файл")
+        return False
+    
+    # Проверяем токен на валидность
+    token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    if len(token) < 30:
+        print("❌ ОШИБКА: TELEGRAM_BOT_TOKEN имеет неправильную длину")
+        return False
+    
+    return True
+
+if not check_environment():
     sys.exit(1)
 
-# OpenRouter ключ
+# ========== ПОЛУЧЕНИЕ ТОКЕНОВ ИЗ ПЕРЕМЕННЫХ ОКРУЖЕНИЯ ==========
+TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 AI_MODEL = "google/gemini-2.0-flash-lite-001"
+
+# Устанавливаем production режим
+os.environ.setdefault("NODE_ENV", "production")
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
+
+print(f"✅ Токен загружен (длина: {len(TELEGRAM_BOT_TOKEN)})")
+print(f"✅ OpenRouter API ключ {'найден' if OPENROUTER_API_KEY else 'не найден'}")
+print(f"✅ Режим: {os.environ.get('NODE_ENV', 'development')}")
 
 class UltimateFurBot:
     def __init__(self):
