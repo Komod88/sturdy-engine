@@ -40,15 +40,17 @@ if not env_loaded:
 # ========== ПРОВЕРКА ТОКЕНОВ ==========
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 if not TELEGRAM_BOT_TOKEN:
-
-
-# ========== ОТЛАДОЧНАЯ ИНФОРМАЦИЯ ==========
-print("=== ОТЛАДОЧНАЯ ИНФОРМАЦИЯ ===")
-print(f"PORT из окружения: {os.environ.get('PORT', 'не задан')}")
-print(f"RENDER_EXTERNAL_URL: {os.environ.get('RENDER_EXTERNAL_URL', 'не задан')}")
-print(f"Токен найден: {'✅' if TELEGRAM_BOT_TOKEN else '❌'}")
-print(f"Длина токена: {len(TELEGRAM_BOT_TOKEN) if TELEGRAM_BOT_TOKEN else 0}")
-print("="*50)
+    print("=== ОТЛАДОЧНАЯ ИНФОРМАЦИЯ ===")
+    print(f"PORT из окружения: {os.environ.get('PORT', 'не задан')}")
+    print(f"RENDER_EXTERNAL_URL: {os.environ.get('RENDER_EXTERNAL_URL', 'не задан')}")
+    print(f"Токен найден: {'✅' if TELEGRAM_BOT_TOKEN else '❌'}")
+    print(f"Длина токена: {len(TELEGRAM_BOT_TOKEN) if TELEGRAM_BOT_TOKEN else 0}")
+    print("="*50)
+    print(f"PORT из окружения: {os.environ.get('PORT', 'не задан')}")
+    print(f"RENDER_EXTERNAL_URL: {os.environ.get('RENDER_EXTERNAL_URL', 'не задан')}")
+    print(f"Токен найден: {'✅' if TELEGRAM_BOT_TOKEN else '❌'}")
+    print(f"Длина токена: {len(TELEGRAM_BOT_TOKEN) if TELEGRAM_BOT_TOKEN else 0}")
+    print("="*50)
     print("❌ ОШИБКА: TELEGRAM_BOT_TOKEN не найден!")
     sys.exit(1)
 
