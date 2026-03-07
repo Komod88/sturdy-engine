@@ -39,6 +39,12 @@ if not env_loaded:
 
 # ========== ПРОВЕРКА ТОКЕНОВ ==========
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
+
+# OpenRouter API
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
+AI_MODEL = "google/gemini-2.0-flash-lite-001"
+
 if not TELEGRAM_BOT_TOKEN:
     print("=== ОТЛАДОЧНАЯ ИНФОРМАЦИЯ ===")
     print(f"PORT из окружения: {os.environ.get('PORT', 'не задан')}")
@@ -62,9 +68,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-print(f"✅ Токен загружен (длина: {len(TELEGRAM_BOT_TOKEN)})")
-    print(f"✅ OpenRouter API ключ: {OPENROUTER_API_KEY if OPENROUTER_API_KEY else 'не найден'}")
-
+    print(f"✅ Токен загружен (длина: {len(TELEGRAM_BOT_TOKEN)})")
+    print(f"✅ OpenRouter API ключ: {OPENROUTER_API_KEY if OPENROUTER_API_KEY else "не найден"}")
 class SimpleBot:
     def __init__(self):
         self.name = "Рыжик"
