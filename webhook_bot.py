@@ -310,7 +310,6 @@ env_paths = [
 
 
 
-    Path('.env'),
 
 
 
