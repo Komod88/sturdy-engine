@@ -18,9 +18,9 @@ aiolimiter==1.1.0
 cachetools==5.3.3
 python-dotenv==1.0.0
 
-# Pydantic - ОБНОВЛЕНО до версий, совместимых с Python 3.13
-pydantic==2.8.0
-pydantic-core==2.20.0
+# Pydantic - ФИНАЛЬНЫЕ ВЕРСИИ, ГАРАНТИРОВАННО РАБОТАЮЩИЕ С PYTHON 3.13
+pydantic==2.10.6
+pydantic-core==2.27.2
 
 # Pillow - совместимая версия
-Pillow==10.4.0
+Pillow==11.1.0
