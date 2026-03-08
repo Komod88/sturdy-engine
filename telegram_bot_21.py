@@ -15,7 +15,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 from telegram import Update
 
 # ТВОЙ ТОКЕН
-TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")")
+TOKEN = os.environ.get("BOT_TOKEN")")
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
