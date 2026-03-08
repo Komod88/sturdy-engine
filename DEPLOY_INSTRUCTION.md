@@ -13,7 +13,7 @@
 | Key | Value |
 |-----|-------|
 | `BOT_TOKEN` | `8696373751:AAFLvYI92hh2wa17S-xICMYwmkXLayX3_gs` |
-| `OPENROUTER_API_KEY` | `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` |
+| `OPENROUTER_API_KEY` | `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` |
 
 ## 🚀 Шаг 3: Перезапусти деплой
 Нажми **Manual Deploy** → **Deploy latest commit**
