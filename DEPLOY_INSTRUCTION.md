@@ -12,7 +12,7 @@
 
 | Key | Value |
 |-----|-------|
-| `TELEGRAM_BOT_TOKEN` | `8696373751:AAFLvYI92hh2wa17S-xICMYwmkXLayX3_gs` |
+| `BOT_TOKEN` | `8696373751:AAFLvYI92hh2wa17S-xICMYwmkXLayX3_gs` |
 | `OPENROUTER_API_KEY` | `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` |
 
 ## 🚀 Шаг 3: Перезапусти деплой
