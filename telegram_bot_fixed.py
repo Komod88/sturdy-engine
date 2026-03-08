@@ -25,7 +25,7 @@ except:
     print("❌ Библиотека telegram не установлена")
     sys.exit(1)
 
-TOKEN = os.environ.get("BOT_TOKEN", "8696373751:AAF6Dja_iSxK8MQxLvq3z1Q3k2x_U_fz8gA")
+TOKEN = os.environ.get("BOT_TOKEN", "8696373751:AAFLvYI92hh2wa17S-xICMYwmkXLayX3_gs")
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
