@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 import os
+
+from config import BOT_TOKEN
 import sys
 import logging
 import asyncio
