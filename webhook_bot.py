@@ -12,6 +12,102 @@ from starlette.responses import PlainTextResponse, Response
 from starlette.routing import Route
 import uvicorn
 import asyncio
+# ========== AI ДИАЛОГ С ПАМЯТЬЮ ==========
+import requests
+import random
+from collections import defaultdict
+
+# Запасные ответы на разные темы
+FALLBACKS = {
+    "привет": ["*виляет хвостом* Привет!", "*машет лапой* Здаров!", "*подпрыгивает* О, привет!"],
+    "как дела": ["*зевает* Норм, а у тебя?", "*потягивается* Скучаю...", "*улыбается* Отлично!"],
+    "что делаешь": ["*лежит на спинке* Отдыхаю", "*гоняется за хвостом* Развлекаюсь", "*смотрит в окно* Мечтаю"],
+    "пока": ["*машет лапой* Пока!", "*грустно* Уходишь?", "Заходи ещё!"],
+    "кто ты": ["Я Рыжик - фурри-лис!", "*гордо* Лис с пушистым хвостом!", "Твой пушистый друг"],
+    "спасибо": ["*обнимает* Пожалуйста!", "Не за что!", "*радуется* Обращайся!"],
+    "люблю": ["*смущается* И я тебя!", "*виляет хвостом* Приятно слышать!", "*прижимается* Ты классный!"],
+}
+
+# История диалога для каждого пользователя
+user_contexts = defaultdict(list)
+
+def get_ai_response(user_id, message):
+    """
+    Рыжик отвечает с учётом контекста диалога
+    """
+    try:
+        api_key = os.environ.get("OPENROUTER_API_KEY")
+        if not api_key:
+            # Если нет ключа - используем запасные ответы
+            lower_msg = message.lower()
+            for key, responses in FALLBACKS.items():
+                if key in lower_msg:
+                    return random.choice(responses)
+            return random.choice(["*чешет за ухом* Хм...", "*наклоняет голову* Расскажи подробнее"])
+
+        # Сохраняем историю для пользователя
+        user_contexts[user_id].append({"role": "user", "content": message})
+        if len(user_contexts[user_id]) > 10:
+            user_contexts[user_id] = user_contexts[user_id][-10:]
+
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "HTTP-Referer": "http://localhost",
+            "X-Title": "FurChat Bot",
+        }
+
+        data = {
+            "model": "openrouter/free",
+            "messages": [
+                {
+                    "role": "system", 
+                    "content": """Ты — Рыжик, фурри-лис. Твои правила:
+- ТОЛЬКО РУССКИЙ ЯЗЫК
+- Используй *действия* в звёздочках (*виляет хвостом*, *зевает*, *потягивается*)
+- Будь дружелюбным, слегка ленивым, с юмором
+- Отвечай коротко (1-2 предложения)
+- Помни историю разговора"""
+                },
+                *user_contexts[user_id]
+            ],
+            "temperature": 0.9,
+            "max_tokens": 200,
+        }
+
+        response = requests.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers=headers,
+            json=data,
+            timeout=10
+        )
+
+        if response.status_code == 200:
+            answer = response.json()['choices'][0]['message']['content']
+            if answer and len(answer) > 3:
+                user_contexts[user_id].append({"role": "assistant", "content": answer})
+                return answer
+
+        # Если API не ответил - ищем по ключевым словам
+        lower_msg = message.lower()
+        for key, responses in FALLBACKS.items():
+            if key in lower_msg:
+                return random.choice(responses)
+
+        return random.choice([
+            "*чешет за ухом* Хм... интересно",
+            "*наклоняет голову* Расскажи подробнее",
+            "*виляет хвостом* Давай поговорим об этом",
+        ])
+
+    except Exception as e:
+        print(f"Ошибка AI: {e}")
+        # При ошибке - запасной ответ
+        lower_msg = message.lower()
+        for key, responses in FALLBACKS.items():
+            if key in lower_msg:
+                return random.choice(responses)
+        return "*зевает* Что-то я задумался..."
+
 
 # ========== МОСТ МЕЖДУ ИМЕНАМИ ТОКЕНА ==========
 # Поддерживаем оба имени для обратной совместимости
@@ -94,6 +190,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"Пиши мне что-нибудь!"
     )
 
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    message = update.message.text
+
+    await update.message.chat.send_action(action='typing')
+    response = get_ai_response(user_id, message)
+    await update.message.reply_text(response)
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     await update.message.reply_text(f"*виляет хвостом* {text}")
