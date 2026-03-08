@@ -31,7 +31,7 @@ from core.bot import FurChat
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 from telegram import Update
 
-TOKEN = "8696373751:AAHVQRg9ZXrJbuaKnT1UdTIAvqa9GEfPan4"
+TOKEN = "8696373751:AAFLvYI92hh2wa17S-xICMYwmkXLayX3_gs"
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 class FurChatTelegram:
