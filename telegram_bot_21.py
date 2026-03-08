@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import os
+
+from config import BOT_TOKEN
 import sys
 import logging
 import asyncio
