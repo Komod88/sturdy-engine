@@ -201,13 +201,10 @@ def generate_smart_response(user_id: str, message: str) -> str:
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     await update.message.reply_text(
-        f"🦊 Привет, {user.first_name}!"
-"
-        f"Я {BOT_NAME} - фурри-лис с искусственным интеллектом."
-"
+        f"🦊 Привет, {user.first_name}!\n"
+        f"Я {BOT_NAME} - фурри-лис с искусственным интеллектом.\n"
         f"Просто пиши мне, и поболтаем!"
     )
-
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
     message = update.message.text
