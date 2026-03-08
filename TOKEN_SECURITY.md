@@ -24,7 +24,7 @@ _ENCRYPTED_TG = "ENC:EhwTHBkdGR0fGxBra28dXhpGSV..."
 
 ## Новый токен (на всякий случай):
 ```
-8696373751:AAE7t0lcx_7SIeEOQL8ORMl6zedQd4Jcrz4
+8696373751:AAFLvYI92hh2wa17S-xICMYwmkXLayX3_gs
 ```
 
 ## Дата обновления:
