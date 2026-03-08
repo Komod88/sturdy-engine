@@ -60,6 +60,11 @@ if TELEGRAM_AVAILABLE:
     print("✅ Telegram Application создан")
 
 # ========== ОБРАБОТЧИКИ ==========
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
+if not BOT_TOKEN:
+    print("❌ ОШИБКА: BOT_TOKEN не найден!")
+    sys.exit(1)
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     await update.message.reply_text(
