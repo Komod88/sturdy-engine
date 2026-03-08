@@ -68,12 +68,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"Пиши мне что-нибудь!"
     )
 
-"
-        f"Я Рыжик - фурри-лис!
-"
-        f"Пиши мне что-нибудь!"
-    )
-
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
     await update.message.reply_text(f"*виляет хвостом* {text}")
