@@ -203,7 +203,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         f"🦊 Привет, {user.first_name}!"
 "
-        f"Я {BOT_NAME} - фурри-лис с искусственным интеллектом.
+        f"Я {BOT_NAME} - фурри-лис с искусственным интеллектом."
 "
         f"Просто пиши мне, и поболтаем!"
     )
