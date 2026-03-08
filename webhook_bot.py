@@ -201,7 +201,7 @@ def generate_smart_response(user_id: str, message: str) -> str:
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     await update.message.reply_text(
-        f"🦊 Привет, {user.first_name}!
+        f"🦊 Привет, {user.first_name}!"
 "
         f"Я {BOT_NAME} - фурри-лис с искусственным интеллектом.
 "
