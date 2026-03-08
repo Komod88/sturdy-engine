@@ -13,6 +13,27 @@ from starlette.routing import Route
 import uvicorn
 import asyncio
 
+# ========== МОСТ МЕЖДУ ИМЕНАМИ ТОКЕНА ==========
+# Поддерживаем оба имени для обратной совместимости
+
+# Сначала пробуем BOT_TOKEN
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
+
+# Если нет, пробуем BOT_TOKEN
+if not BOT_TOKEN:
+    BOT_TOKEN = os.environ.get("BOT_TOKEN")
+    if BOT_TOKEN:
+        print("✅ Используется BOT_TOKEN как BOT_TOKEN")
+
+# Если ничего нет — ошибка
+if not BOT_TOKEN:
+    print("❌ ОШИБКА: Токен не найден! (пробовали BOT_TOKEN и BOT_TOKEN)")
+    print("💡 Проверь .env файл или переменные окружения")
+    sys.exit(1)
+
+print(f"✅ Токен загружен (длина: {len(BOT_TOKEN)})")
+
+
 # ========== ЗАГРУЗКА ИЗ .ENV ==========
 try:
     from dotenv import load_dotenv
