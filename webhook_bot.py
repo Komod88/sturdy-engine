@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 """
-Исправленный бот для Render
+Telegram bot for Render
 """
 
 import os
 import sys
 import logging
-import urllib.parse
 from pathlib import Path
 from starlette.applications import Starlette
 from starlette.responses import PlainTextResponse, Response
@@ -14,25 +13,38 @@ from starlette.routing import Route
 import uvicorn
 import asyncio
 
-# ========== ИМПОРТЫ TELEGRAM ==========
+# ========== ЗАГРУЗКА ИЗ .ENV ==========
+try:
+    from dotenv import load_dotenv
+    env_path = Path('.env')
+    if env_path.exists():
+        load_dotenv(dotenv_path=env_path)
+        print("✅ .env файл загружен")
+    else:
+        print("⚠️ .env файл не найден, использую переменные окружения")
+except ImportError:
+    print("⚠️ python-dotenv не установлен")
+
+# ========== ТОКЕНЫ ИЗ ПЕРЕМЕННЫХ ОКРУЖЕНИЯ ==========
+TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+
+if not TELEGRAM_BOT_TOKEN:
+    print("❌ ОШИБКА: TELEGRAM_BOT_TOKEN не найден в переменных окружения!")
+    sys.exit(1)
+
+print(f"✅ Токен загружен (длина: {len(TELEGRAM_BOT_TOKEN)})")
+print(f"✅ OpenRouter API ключ {'найден' if OPENROUTER_API_KEY else 'не найден'}")
+
+# ========== TELEGRAM ИМПОРТЫ ==========
 try:
     from telegram import Update
     from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
     TELEGRAM_AVAILABLE = True
+    print("✅ python-telegram-bot импортирован")
 except ImportError:
     TELEGRAM_AVAILABLE = False
     print("⚠️ python-telegram-bot не установлен")
-
-# ========== ТОКЕН ==========
-TOKEN = "8696373751:AAFLvYI92hh2wa17S-xICMYwmkXLayX3_gs"
-ENCODED_TOKEN = "8696373751%3AAAE7t0lcx_7SIeEOQL8ORMl6zedQd4Jcrz4"
-
-if not TOKEN:
-    print("❌ ОШИБКА: TOKEN не найден!")
-    sys.exit(1)
-
-print(f"✅ Токен загружен (длина: {len(TOKEN)})")
-print(f"✅ Закодированный токен: {ENCODED_TOKEN}")
 
 # ========== НАСТРОЙКА ЛОГИРОВАНИЯ ==========
 logging.basicConfig(
@@ -44,7 +56,7 @@ logger = logging.getLogger(__name__)
 # ========== СОЗДАЁМ TELEGRAM APPLICATION ==========
 application = None
 if TELEGRAM_AVAILABLE:
-    application = Application.builder().token(TOKEN).build()
+    application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
     print("✅ Telegram Application создан")
 
 # ========== ОБРАБОТЧИКИ ==========
@@ -55,7 +67,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 "
         f"Я Рыжик - фурри-лис!
 "
-        f"/help - помощь"
+        f"Пиши мне что-нибудь!"
     )
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -91,7 +103,7 @@ async def test(request):
 
 # ========== МАРШРУТЫ ==========
 routes = [
-    Route(f"/8696373751%3AAAE7t0lcx_7SIeEOQL8ORMl6zedQd4Jcrz4", telegram_webhook, methods=["POST"]),
+    Route(f"/{TELEGRAM_BOT_TOKEN}", telegram_webhook, methods=["POST"]),
     Route("/healthcheck", healthcheck),
     Route("/test", test),
 ]
@@ -108,7 +120,7 @@ async def startup():
         await application.start()
         
         render_url = os.environ.get("RENDER_EXTERNAL_URL", "https://furchat-bot.onrender.com")
-        webhook_url = f"{render_url}/{ENCODED_TOKEN}"
+        webhook_url = f"{render_url}/{TELEGRAM_BOT_TOKEN}"
         
         logger.info(f"🔗 Устанавливаю webhook: {webhook_url}")
         
