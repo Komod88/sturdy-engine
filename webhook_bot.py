@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+"""
+Упрощённый бот для Render
+"""
+
 import os
 import sys
 import logging
@@ -8,22 +12,22 @@ from starlette.responses import PlainTextResponse
 from starlette.routing import Route
 import uvicorn
 
-# ========== НАСТРОЙКИ ==========
-TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+# ========== ТОКЕН ПРЯМО В КОДЕ ==========
+TELEGRAM_BOT_TOKEN = "8696373751:AAE7t0lcx_7SIeEOQL8ORMl6zedQd4Jcrz4"
+
 if not TELEGRAM_BOT_TOKEN:
     print("❌ ОШИБКА: TELEGRAM_BOT_TOKEN не найден!")
     sys.exit(1)
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 print(f"✅ Токен загружен (длина: {len(TELEGRAM_BOT_TOKEN)})")
 
 # ========== ЭНДПОИНТЫ ==========
 async def healthcheck(request):
+    """Проверка здоровья"""
     return PlainTextResponse("healthy")
 
 async def test(request):
+    """Тестовый эндпоинт"""
     return PlainTextResponse("✅ Бот работает!")
 
 # ========== МАРШРУТЫ ==========
