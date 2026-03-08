@@ -26,14 +26,14 @@ except ImportError:
     print("⚠️ python-dotenv не установлен")
 
 # ========== ТОКЕНЫ ИЗ ПЕРЕМЕННЫХ ОКРУЖЕНИЯ ==========
-TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 
-if not TELEGRAM_BOT_TOKEN:
-    print("❌ ОШИБКА: TELEGRAM_BOT_TOKEN не найден в переменных окружения!")
+if not BOT_TOKEN:
+    print("❌ ОШИБКА: BOT_TOKEN не найден в переменных окружения!")
     sys.exit(1)
 
-print(f"✅ Токен загружен (длина: {len(TELEGRAM_BOT_TOKEN)})")
+print(f"✅ Токен загружен (длина: {len(BOT_TOKEN)})")
 print(f"✅ OpenRouter API ключ {'найден' if OPENROUTER_API_KEY else 'не найден'}")
 
 # ========== TELEGRAM ИМПОРТЫ ==========
@@ -56,7 +56,7 @@ logger = logging.getLogger(__name__)
 # ========== СОЗДАЁМ TELEGRAM APPLICATION ==========
 application = None
 if TELEGRAM_AVAILABLE:
-    application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+    application = Application.builder().token(BOT_TOKEN).build()
     print("✅ Telegram Application создан")
 
 # ========== ОБРАБОТЧИКИ ==========
@@ -101,7 +101,7 @@ async def test(request):
 
 # ========== МАРШРУТЫ ==========
 routes = [
-    Route(f"/{TELEGRAM_BOT_TOKEN}", telegram_webhook, methods=["POST"]),
+    Route(f"/{BOT_TOKEN}", telegram_webhook, methods=["POST"]),
     Route("/healthcheck", healthcheck),
     Route("/test", test),
 ]
@@ -118,7 +118,7 @@ async def startup():
         await application.start()
         
         render_url = os.environ.get("RENDER_EXTERNAL_URL", "https://furchat-bot.onrender.com")
-        webhook_url = f"{render_url}/{TELEGRAM_BOT_TOKEN}"
+        webhook_url = f"{render_url}/{BOT_TOKEN}"
         
         logger.info(f"🔗 Устанавливаю webhook: {webhook_url}")
         
