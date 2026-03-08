@@ -63,7 +63,11 @@ if TELEGRAM_AVAILABLE:
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     await update.message.reply_text(
-        f"🦊 Привет, {user.first_name}!
+        f"🦊 Привет, {user.first_name}!\n"
+        f"Я Рыжик - фурри-лис!\n"
+        f"Пиши мне что-нибудь!"
+    )
+
 "
         f"Я Рыжик - фурри-лис!
 "
