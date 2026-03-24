@@ -3,8 +3,14 @@ services:
     name: furchat-bot
     runtime: python
     plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: python webhook_bot.py
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+    startCommand: python furchat_bot.py
     envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: PORT
+        value: 10000
       - key: BOT_TOKEN
         sync: false
