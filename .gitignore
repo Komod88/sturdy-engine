@@ -1,14 +1,6 @@
-# Secrets
 .env
 .env.local
 *.env
-
-# Python
 __pycache__/
-*.py[cod]
-*.so
-.Python
-
-# Logs
-*.log
+*.pyc
 .mygit/
